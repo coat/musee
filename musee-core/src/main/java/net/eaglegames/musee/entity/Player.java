@@ -1,19 +1,22 @@
 package net.eaglegames.musee.entity;
 
-import net.eaglegames.musee.graphics.EntityRenderer;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 public class Player {
+    private Integer id;
     private Musee musee;
     private List<Painting> hand;
-    private EntityRenderer entityRenderer;
 
-    public Player() {
+    public Player(Integer id) {
+        this.id = id;
         this.musee = new Musee();
         this.hand = new ArrayList<>();
+    }
+
+    public Integer getId() {
+        return id;
     }
 
     public Musee getMusee() {
@@ -33,7 +36,19 @@ public class Player {
     }
 
     @Override
-    public String toString() {
-        return hand.stream().map(Painting::toString).collect(Collectors.joining(","));
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Player player = (Player) o;
+        return Objects.equals(id, player.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

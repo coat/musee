@@ -6,18 +6,18 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 public class Deck {
+    public static final int DECK_SIZE = 60;
+
     private List<Painting> paintings;
 
     public Deck() {
         int position = 1;
-        paintings = new ArrayList<>(60);
+        paintings = new ArrayList<>(DECK_SIZE);
 
-        while (position <= 60) {
-            paintings.add(new Painting(Painting.Theme.LANDSCAPE, position++));
-            paintings.add(new Painting(Painting.Theme.WATER, position++));
-            paintings.add(new Painting(Painting.Theme.PERSONS, position++));
-            paintings.add(new Painting(Painting.Theme.ARCHITECTURE, position++));
-            paintings.add(new Painting(Painting.Theme.ANIMAL, position++));
+        while (position <= DECK_SIZE) {
+            for (Painting.Theme theme : Painting.Theme.values()) {
+                paintings.add(new Painting(theme, position++));
+            }
         }
     }
 

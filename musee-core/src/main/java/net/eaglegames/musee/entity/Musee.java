@@ -1,5 +1,7 @@
 package net.eaglegames.musee.entity;
 
+import net.eaglegames.musee.game.Game;
+
 public class Musee {
     private Gallery upper;
     private Gallery middle;
@@ -44,24 +46,16 @@ public class Musee {
         this.score = score;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder out = new StringBuilder();
-        out.append("_______________________________________________\n");
-        out.append(upper).append("\n");
-        out.append(middle).append("\n");
-        out.append(lower);
-        out.append("_______________________________________________\n");
-
-        return out.toString();
+    public static void score(final Game game) {
+        score(game, game.getCurrentPlayer().getMusee());
     }
 
-    public static void score(Musee musee) {
+    public static void score(final Game game, final Musee musee) {
         int score = 0;
 
-        score += Gallery.score(musee.getUpper());
-        score += Gallery.score(musee.getMiddle(), musee.getUpper());
-        score += Gallery.score(musee.getLower(), musee.getMiddle());
+        score += Gallery.score(game, musee.getUpper());
+        score += Gallery.score(game, musee.getMiddle(), musee.getUpper());
+        score += Gallery.score(game, musee.getLower(), musee.getMiddle());
 
         musee.setScore(score);
     }

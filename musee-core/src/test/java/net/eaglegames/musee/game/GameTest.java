@@ -1,45 +1,88 @@
 package net.eaglegames.musee.game;
 
 import net.eaglegames.musee.entity.Painting;
+import net.eaglegames.musee.entity.Player;
+import net.eaglegames.musee.entity.Space;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 public class GameTest {
     @Test
-    public void gameIsSetupCorrectly() {
-        Game game = new Game(null);
+    public void playersAreSetupCorrectly() {
+        Game game = new Game();
+        game.start();
 
         assertNotNull(game.getPlayer1());
         assertEquals(5, game.getPlayer1().getHand().size());
 
         assertNotNull(game.getPlayer2());
         assertEquals(5, game.getPlayer2().getHand().size());
+
+        assertEquals(game.getPlayer1(), game.getCurrentPlayer());
+        assertEquals(game.getPlayer2(), game.getOpponent());
     }
 
     @Test
-    public void gameIsScoredCorrectly() {
-        Game game = new Game(null);
+    public void staircasesAreSetup() {
+        Player player1 = new Player(1);
+        Player player2 = new Player(2);
 
-        game.getPlayer1().getMusee().getUpper().getSpaces().get(0).setPainting(new Painting(Painting.Theme.PERSONS, 8));
-        game.getPlayer1().getMusee().getUpper().getSpaces().get(1).setPainting(new Painting(Painting.Theme.PERSONS, 8));
-        game.getPlayer1().getMusee().getUpper().getSpaces().get(2).setPainting(new Painting(Painting.Theme.PERSONS, 11));
-        game.getPlayer1().getMusee().getUpper().getSpaces().get(3).setPainting(new Painting(Painting.Theme.PERSONS, 23));
-        game.getPlayer1().getMusee().getUpper().getSpaces().get(4).setPainting(new Painting(Painting.Theme.ANIMAL, 28));
-        game.getPlayer1().getMusee().getUpper().getSpaces().get(5).setPainting(new Painting(Painting.Theme.PERSONS, 38));
+        List<Boolean> top = Arrays.asList(true, false, false, false, false, true);
+        List<Boolean> bottom = Arrays.asList(false, true, true, true, true, false);
 
-        game.getPlayer1().getMusee().getMiddle().getSpaces().get(0).setPainting(new Painting(Painting.Theme.ANIMAL, 4));
-        game.getPlayer1().getMusee().getMiddle().getSpaces().get(1).setPainting(new Painting(Painting.Theme.ARCHITECTURE, 10));
-        game.getPlayer1().getMusee().getMiddle().getSpaces().get(2).setPainting(new Painting(Painting.Theme.LANDSCAPE, 25));
-        game.getPlayer1().getMusee().getMiddle().getSpaces().get(3).setPainting(new Painting(Painting.Theme.LANDSCAPE, 35));
-        game.getPlayer1().getMusee().getMiddle().getSpaces().get(4).setPainting(new Painting(Painting.Theme.LANDSCAPE, 45));
-        game.getPlayer1().getMusee().getMiddle().getSpaces().get(5).setPainting(new Painting(Painting.Theme.ANIMAL, 48));
+        Game.setupStaircases(player1, player2, top, bottom);
 
-        game.getPlayer1().getMusee().getLower().getSpaces().get(1).setPainting(new Painting(Painting.Theme.WATER, 19));
-        game.getPlayer1().getMusee().getLower().getSpaces().get(2).setPainting(new Painting(Painting.Theme.WATER, 31));
-        game.getPlayer1().getMusee().getLower().getSpaces().get(3).setPainting(new Painting(Painting.Theme.LANDSCAPE, 36));
-        game.getPlayer1().getMusee().getLower().getSpaces().get(4).setPainting(new Painting(Painting.Theme.LANDSCAPE, 44));
-        game.getPlayer1().getMusee().getLower().getSpaces().get(5).setPainting(new Painting(Painting.Theme.ANIMAL, 45));
+        assertTrue(player1.getMusee().getUpper().getSpaces().get(0).isLowerStaircase());
+        assertTrue(player2.getMusee().getUpper().getSpaces().get(0).isLowerStaircase());
+
+        assertTrue(player1.getMusee().getUpper().getSpaces().get(5).isLowerStaircase());
+        assertTrue(player2.getMusee().getUpper().getSpaces().get(5).isLowerStaircase());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void setupStaircasesHasRightAmountOfBooleans() {
+        Player player1 = new Player(1);
+        Player player2 = new Player(2);
+
+        List<Boolean> top = Arrays.asList(true, false, false, false, false, true);
+        List<Boolean> bottom = Arrays.asList(false, true, true, true, true);
+
+        Game.setupStaircases(player1, player2, top, bottom);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void setupRandomStaircasesForOnlyTwoPlayers() {
+        Game.setupRandomStaircases(new Player(1), new Player(2), new Player(3));
+    }
+
+    @Test
+    public void validMove() {
+        Game game = new Game();
+        game.start();
+
+        assertEquals(50, game.getDeck().getPaintings().size());
+
+        Painting painting = game.getCurrentPlayer().getHand().get(0);
+        Space space = game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(0);
+
+        assertTrue(space.getPainting() == null);
+        boolean success = game.playTurn(space, painting);
+        assertEquals(49, game.getDeck().getPaintings().size());
+        assertTrue(success);
+        assertEquals(game.getPlayer2(), game.getCurrentPlayer());
+
+        success = game.playTurn(space, painting);
+        assertFalse("Invalid move should return false", success);
+
+        // Card should still be in the deck and current player remains the same
+        assertEquals(49, game.getDeck().getPaintings().size());
+        assertEquals(game.getPlayer2(), game.getCurrentPlayer());
     }
 }

@@ -4,9 +4,11 @@ public class Space {
     private int position;
     private boolean lowerStaircase;
     private Painting painting;
+    private Gallery gallery;
 
-    public Space(int position) {
+    public Space(int position, Gallery gallery) {
         this.position = position;
+        this.gallery = gallery;
     }
 
     public int getPosition() {
@@ -33,8 +35,15 @@ public class Space {
         this.painting = painting;
     }
 
-    @Override
-    public String toString() {
-        return painting == null ? "|     |" : "|" + painting + "|";
+    public Gallery getGallery() {
+        return gallery;
+    }
+
+    public void setGallery(Gallery gallery) {
+        this.gallery = gallery;
+    }
+
+    public boolean hasPainting() {
+        return painting != null;
     }
 }

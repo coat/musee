@@ -10,10 +10,10 @@ public class RandomUtil {
     private RandomUtil() {
     }
 
-
     /**
      * Get a random list of integers from a sequential list
-     * @param max the
+     *
+     * @param max          the max range of integers
      * @param randomAmount how big the slice should be
      * @return list of integers taken off the top of a shuffled list of integers
      */

@@ -1,33 +1,63 @@
 package net.eaglegames.musee.console;
 
+import com.googlecode.lanterna.TerminalPosition;
+import com.googlecode.lanterna.TextColor;
+import com.googlecode.lanterna.graphics.TextGraphics;
+import com.googlecode.lanterna.gui2.*;
+import com.googlecode.lanterna.input.KeyStroke;
+import com.googlecode.lanterna.screen.Screen;
+import com.googlecode.lanterna.screen.TerminalScreen;
+import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
+import com.googlecode.lanterna.terminal.Terminal;
+import net.eaglegames.musee.entity.Musee;
 import net.eaglegames.musee.game.Game;
-import net.eaglegames.musee.console.graphics.ConsoleRenderer;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class MuseeConsole {
-    public static void main(String[] args) {
-        Game game = new Game(new ConsoleRenderer());
+    private static Game game;
+    private static Screen screen;
 
-        game.getPlayer1().getMusee().getUpper().getSpaces().get(0).setPainting(game.getDeck().draw());
-        game.getPlayer1().getMusee().getUpper().getSpaces().get(1).setPainting(game.getDeck().draw());
-        game.getPlayer1().getMusee().getUpper().getSpaces().get(2).setPainting(game.getDeck().draw());
-        game.getPlayer1().getMusee().getUpper().getSpaces().get(3).setPainting(game.getDeck().draw());
-        game.getPlayer1().getMusee().getUpper().getSpaces().get(4).setPainting(game.getDeck().draw());
-        game.getPlayer1().getMusee().getUpper().getSpaces().get(5).setPainting(game.getDeck().draw());
+    public static void main(String[] args) throws IOException {
+        // Setup terminal and screen layers
+        Terminal terminal = new DefaultTerminalFactory().createTerminal();
+        screen = new TerminalScreen(terminal);
 
-        game.getPlayer1().getMusee().getMiddle().getSpaces().get(0).setPainting(game.getDeck().draw());
-        game.getPlayer1().getMusee().getMiddle().getSpaces().get(1).setPainting(game.getDeck().draw());
-        game.getPlayer1().getMusee().getMiddle().getSpaces().get(2).setPainting(game.getDeck().draw());
-        game.getPlayer1().getMusee().getMiddle().getSpaces().get(3).setPainting(game.getDeck().draw());
-        game.getPlayer1().getMusee().getMiddle().getSpaces().get(4).setPainting(game.getDeck().draw());
-        game.getPlayer1().getMusee().getMiddle().getSpaces().get(5).setPainting(game.getDeck().draw());
+        TextGraphics tg = screen.newTextGraphics();
 
-        game.getPlayer1().getMusee().getLower().getSpaces().get(0).setPainting(game.getDeck().draw());
-        game.getPlayer1().getMusee().getLower().getSpaces().get(1).setPainting(game.getDeck().draw());
-        game.getPlayer1().getMusee().getLower().getSpaces().get(2).setPainting(game.getDeck().draw());
+        screen.setCursorPosition(new TerminalPosition(5, 5));
+        screen.startScreen();
+        screen.clear();
 
-        game.getPlayer1().getMusee().getUpper().setBonus(true);
-        game.getPlayer1().getMusee().getMiddle().setBonus(true);
+        game = new Game();
 
-        game.draw();
+        game.start();
+
+        render(tg);
+        screen.readInput();
+
+        game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(2), game.getCurrentPlayer().getHand().get(0));
+
+        render(tg);
+        screen.readInput();
+
+        screen.stopScreen();
+    }
+
+    private static void render(TextGraphics tg) throws IOException {
+        tg.putString(0, 0, "Current player: " + game.getCurrentPlayer().getId());
+        tg.putString(0, 1, "Your score: " + game.getCurrentPlayer().getMusee().getScore() + ", opponent's score: " + game.getOpponent().getMusee().getScore());
+
+        String hand = game.getCurrentPlayer().getHand()
+                .stream()
+                .map(p -> p.getTheme().name().substring(0, 2) + ":" + String.format("%1$2s", p.getValue()))
+                .collect(Collectors.joining(","));
+        tg.putString(0, 2, "Your hand: " + hand);
+
+        tg.putString(0, 3, "Your Musée");
+
+        screen.refresh();
     }
 }

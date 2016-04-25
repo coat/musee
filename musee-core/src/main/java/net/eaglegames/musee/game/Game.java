@@ -1,42 +1,79 @@
 package net.eaglegames.musee.game;
 
-import net.eaglegames.musee.entity.Deck;
-import net.eaglegames.musee.entity.Player;
-import net.eaglegames.musee.graphics.GraphicsRenderer;
+import net.eaglegames.musee.entity.*;
 import net.eaglegames.musee.util.RandomUtil;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Game {
-    private GraphicsRenderer graphicsRenderer;
-
     private Player player1;
     private Player player2;
     private Player currentPlayer;
     private Deck deck;
+    private Map<Gallery.Type, Boolean> claimedBonuses = new HashMap<>();
 
-    private boolean upperBonusClaimed = false;
-
-    public Game(GraphicsRenderer graphicsRenderer) {
-        this.graphicsRenderer = graphicsRenderer;
-        setup();
-    }
-
-    public void setup() {
-        player1 = new Player();
-        player2 = new Player();
-
+    public void start() {
         deck = new Deck();
         deck.shuffle();
 
+        player1 = new Player(1);
         player1.setHand(deck.draw(5));
+
+        player2 = new Player(2);
         player2.setHand(deck.draw(5));
 
         setupRandomStaircases(player1, player2);
 
+        claimedBonuses.put(Gallery.Type.UPPER, false);
+        claimedBonuses.put(Gallery.Type.MIDDLE, false);
+        claimedBonuses.put(Gallery.Type.LOWER, false);
+
         setCurrentPlayer(player1);
+    }
+
+    public boolean playTurn(final Space space, final Painting painting) {
+        // can't place a painting on a space that already has a painting
+        if (space.hasPainting()) {
+            return false;
+        }
+
+        // paintings must be placed sequentially left to right according to their value in a gallery
+        long biggerPaintings = space.getGallery().getSpaces().stream()
+                // get all spaces to the left of the selected space that have a painting
+                .filter(s -> s.getPosition() < space.getPosition())
+                .filter(Space::hasPainting)
+                .collect(Collectors.toList()).stream()
+                // return any paintings that have a higher value then the selected painting
+                .filter(s -> s.getPainting().getValue() > painting.getValue())
+                .count();
+
+        if (biggerPaintings > 0) {
+            return false;
+        }
+
+        currentPlayer.getHand().remove(painting);
+        space.setPainting(painting);
+        currentPlayer.getHand().add(deck.draw());
+
+        currentPlayer = currentPlayer == player1 ? player2 : player1;
+
+        updateScores();
+
+        return true;
+    }
+
+    public Player getOpponent() {
+        return currentPlayer == player1 ? player2 : player1;
+    }
+
+    public void updateScores() {
+        Musee.score(this, player1.getMusee());
+        Musee.score(this, player2.getMusee());
     }
 
     /**
@@ -44,12 +81,16 @@ public class Game {
      *
      * @param player1 first player
      * @param player2 second player
-     * @param top the staircase between upper and middle galleries
-     * @param bottom the staircase between the middle and lower galleries
+     * @param top     the staircase between upper and middle galleries
+     * @param bottom  the staircase between the middle and lower galleries
      */
-    private static void setupStaircases(Player player1, Player player2,
-                                        List<Boolean> top, List<Boolean> bottom) {
-        IntStream.range(0, 6).forEach(i -> {
+    public static void setupStaircases(Player player1, Player player2,
+                                       List<Boolean> top, List<Boolean> bottom) {
+        if (top.size() != Gallery.GALLERY_SIZE || bottom.size() != Gallery.GALLERY_SIZE) {
+            throw new IllegalArgumentException("Staircases must contain 6 booleans");
+        }
+
+        IntStream.range(0, Gallery.GALLERY_SIZE).forEach(i -> {
             if (top.get(i)) {
                 player1.getMusee().getUpper().getSpaces().get(i).setLowerStaircase(true);
                 player2.getMusee().getUpper().getSpaces().get(i).setLowerStaircase(true);
@@ -63,26 +104,24 @@ public class Game {
 
     /**
      * Setup staircases randomly
-     * @param player1 first player
-     * @param player2 second player
+     *
+     * @param players must be 2 Players
      */
-    private static void setupRandomStaircases(Player player1, Player player2) {
-        final List<Integer> upperStaircases = RandomUtil.getRandomInts(6, 3);
-        final List<Integer> lowerStaircases = RandomUtil.getRandomInts(6, 3);
+    public static void setupRandomStaircases(Player... players) {
+        if (players.length != 2) {
+            throw new IllegalArgumentException("There must be exactly 2 players");
+        }
 
-        upperStaircases.stream().forEach(s -> {
-            player1.getMusee().getUpper().getSpaces().get(s).setLowerStaircase(true);
-            player2.getMusee().getUpper().getSpaces().get(s).setLowerStaircase(true);
-        });
+        final List<Integer> upperStaircases = RandomUtil.getRandomInts(Gallery.GALLERY_SIZE, 3);
+        final List<Integer> lowerStaircases = RandomUtil.getRandomInts(Gallery.GALLERY_SIZE, 3);
 
-        lowerStaircases.stream().forEach(s -> {
-            player1.getMusee().getMiddle().getSpaces().get(s).setLowerStaircase(true);
-            player2.getMusee().getMiddle().getSpaces().get(s).setLowerStaircase(true);
-        });
-    }
+        upperStaircases.stream().forEach(
+                space -> Arrays.stream(players).forEach(
+                        player -> player.getMusee().getUpper().getSpaces().get(space).setLowerStaircase(true)));
 
-    public void draw() {
-        graphicsRenderer.render(this);
+        lowerStaircases.stream().forEach(
+                space -> Arrays.stream(players).forEach(
+                        player -> player.getMusee().getMiddle().getSpaces().get(space).setLowerStaircase(true)));
     }
 
     public Player getPlayer1() {
@@ -91,14 +130,6 @@ public class Game {
 
     public void setPlayer1(Player player1) {
         this.player1 = player1;
-    }
-
-    public GraphicsRenderer getGraphicsRenderer() {
-        return graphicsRenderer;
-    }
-
-    public void setGraphicsRenderer(GraphicsRenderer graphicsRenderer) {
-        this.graphicsRenderer = graphicsRenderer;
     }
 
     public Player getPlayer2() {
@@ -123,5 +154,9 @@ public class Game {
 
     public void setCurrentPlayer(Player currentPlayer) {
         this.currentPlayer = currentPlayer;
+    }
+
+    public Map<Gallery.Type, Boolean> getClaimedBonuses() {
+        return claimedBonuses;
     }
 }

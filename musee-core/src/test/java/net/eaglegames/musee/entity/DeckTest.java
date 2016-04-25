@@ -11,7 +11,7 @@ public class DeckTest {
     public void deckShouldBeCreatedCorrectly() {
         Deck deck = new Deck();
 
-        assertEquals(60, deck.getPaintings().size());
+        assertEquals(Deck.DECK_SIZE, deck.getPaintings().size());
 
         assertEquals(Painting.Theme.ANIMAL, deck.getPaintings().get(15 - 1).getTheme());
         assertEquals(15, deck.getPaintings().get(15 - 1).getValue().intValue());

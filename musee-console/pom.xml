@@ -11,7 +11,6 @@
     <artifactId>musee-console</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-
     <dependencies>
         <dependency>
             <groupId>net.eaglegames</groupId>
@@ -21,7 +20,7 @@
         <dependency>
             <groupId>com.googlecode.lanterna</groupId>
             <artifactId>lanterna</artifactId>
-            <version>3.0.0-beta1</version>
+            <version>3.0.0-beta2</version>
         </dependency>
     </dependencies>
 </project>

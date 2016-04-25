@@ -1,22 +1,25 @@
 package net.eaglegames.musee.entity;
 
+import net.eaglegames.musee.game.Game;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
  * Represents a player's gallery
  */
 public class Gallery {
+    public static final int GALLERY_SIZE = 6;
+
     private Type type;
-    private List<Space> spaces = new ArrayList<>(6);
+    private List<Space> spaces = new ArrayList<>(GALLERY_SIZE);
     private boolean bonus = false;
 
     public Gallery(Type type) {
         this.type = type;
         // Generate empty spaces
-        IntStream.range(0, 6).forEach(i -> spaces.add(new Space(i)));
+        IntStream.range(0, GALLERY_SIZE).forEach(i -> spaces.add(new Space(i, this)));
     }
 
     public Type getType() {
@@ -43,41 +46,14 @@ public class Gallery {
         this.bonus = bonus;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder out = new StringBuilder();
-        out.append(spaces.stream().map(Space::toString).collect(Collectors.joining(" ")))
-                .append(bonus ? " GALLERY\n" : "\n")
-                .append("|     | |     | |     | |     | |     | |     |")
-                .append(bonus ? "  BONUS\n" : "\n")
-                .append("|     | |     | |     | |     | |     | |     |\n");
-
-        spaces.stream().forEach(space -> {
-            if (type.equals(Type.UPPER)) {
-                if (space.isLowerStaircase())
-                    out.append(">     < ");
-                else
-                    out.append("======= ");
-            }
-            if (type.equals(Type.MIDDLE)) {
-                if (space.isLowerStaircase())
-                    out.append(">     < ");
-                else
-                    out.append("======= ");
-            }
-        });
-
-        return out.toString();
-    }
-
     /**
      * Used to score the upper gallery as there will be no gallery above it to score staircase connected themes
      *
      * @param gallery should be Upper gallery
      * @return the score for the upper gallery
      */
-    public static int score(Gallery gallery) {
-        return score(gallery, null);
+    public static int score(Game game, Gallery gallery) {
+        return score(game, gallery, null);
     }
 
     /**
@@ -87,10 +63,10 @@ public class Gallery {
      * @param above   the gallery above to reference to check if same theme matches above space in gallery
      * @return score for the gallery
      */
-    public static int score(Gallery gallery, Gallery above) {
+    public static int score(Game game, Gallery gallery, Gallery above) {
         int score = 0;
         for (Space space : gallery.getSpaces()) {
-            if (space.getPainting() != null) {
+            if (space.hasPainting()) {
                 score += 1;
 
                 // Gallery theme bonuses
@@ -111,6 +87,13 @@ public class Gallery {
                         }
                     }
                 }
+            }
+        }
+
+        if (!game.getClaimedBonuses().get(gallery.getType())) {
+            if (gallery.getSpaces().stream().filter(Space::hasPainting).count() == 6) {
+                game.getClaimedBonuses().put(gallery.getType(), true);
+                gallery.setBonus(true);
             }
         }
 
