@@ -17,7 +17,11 @@ public class Game {
     private Deck deck;
     private Map<Gallery.Type, Boolean> claimedBonuses = new HashMap<>();
 
-    public void start() {
+    /**
+     * Initialize the game.  Create and shuffle the deck; create the players and draw 5 from the deck; set claimed
+     * bonuses to false; set currentPlayer to player1
+     */
+    public Game() {
         deck = new Deck();
         deck.shuffle();
 
@@ -27,8 +31,6 @@ public class Game {
         player2 = new Player(2);
         player2.setHand(deck.draw(5));
 
-        setupRandomStaircases(player1, player2);
-
         claimedBonuses.put(Gallery.Type.UPPER, false);
         claimedBonuses.put(Gallery.Type.MIDDLE, false);
         claimedBonuses.put(Gallery.Type.LOWER, false);
@@ -37,43 +39,34 @@ public class Game {
     }
 
     public boolean playTurn(final Space space, final Painting painting) {
-        // can't place a painting on a space that already has a painting
-        if (space.hasPainting()) {
+        if (!space.getGallery().validSpaceForPainting(space, painting)) {
             return false;
         }
 
-        // paintings must be placed sequentially left to right according to their value in a gallery
-        long biggerPaintings = space.getGallery().getSpaces().stream()
-                // get all spaces to the left of the selected space that have a painting
-                .filter(s -> s.getPosition() < space.getPosition())
-                .filter(Space::hasPainting)
-                .collect(Collectors.toList()).stream()
-                // return any paintings that have a higher value then the selected painting
-                .filter(s -> s.getPainting().getValue() > painting.getValue())
-                .count();
-
-        if (biggerPaintings > 0) {
-            return false;
-        }
-
+        // space is valid, place the painting in the space
         currentPlayer.getHand().remove(painting);
         space.setPainting(painting);
+
+        // draw a new card
+        // TODO: the deck could be empty?
         currentPlayer.getHand().add(deck.draw());
 
-        currentPlayer = currentPlayer == player1 ? player2 : player1;
+        Musee.score(this, currentPlayer.getMusee());
 
-        updateScores();
+        if (!player1.hasValidMoves() && !player2.hasValidMoves()) {
+            System.out.println("Game over!");
+        }
+
+        // switch player if the next player has moves left
+        if (getOpponent().hasValidMoves()) {
+            currentPlayer = currentPlayer == player1 ? player2 : player1;
+        }
 
         return true;
     }
 
     public Player getOpponent() {
         return currentPlayer == player1 ? player2 : player1;
-    }
-
-    public void updateScores() {
-        Musee.score(this, player1.getMusee());
-        Musee.score(this, player2.getMusee());
     }
 
     /**
@@ -88,6 +81,10 @@ public class Game {
                                        List<Boolean> top, List<Boolean> bottom) {
         if (top.size() != Gallery.GALLERY_SIZE || bottom.size() != Gallery.GALLERY_SIZE) {
             throw new IllegalArgumentException("Staircases must contain 6 booleans");
+        }
+
+        if (top.stream().filter(s -> s).count() + bottom.stream().filter(s -> s).count() != 6) {
+            throw new IllegalArgumentException("Must have exactly 6 staircases set");
         }
 
         IntStream.range(0, Gallery.GALLERY_SIZE).forEach(i -> {
@@ -112,8 +109,10 @@ public class Game {
             throw new IllegalArgumentException("There must be exactly 2 players");
         }
 
-        final List<Integer> upperStaircases = RandomUtil.getRandomInts(Gallery.GALLERY_SIZE, 3);
-        final List<Integer> lowerStaircases = RandomUtil.getRandomInts(Gallery.GALLERY_SIZE, 3);
+        final List<Integer> staircases = RandomUtil.getRandomInts(Gallery.GALLERY_SIZE * 2, 6);
+
+        List<Integer> upperStaircases = staircases.subList(0, Gallery.GALLERY_SIZE - 1);
+        List<Integer> lowerStaircases = staircases.subList(Gallery.GALLERY_SIZE, 11);
 
         upperStaircases.stream().forEach(
                 space -> Arrays.stream(players).forEach(

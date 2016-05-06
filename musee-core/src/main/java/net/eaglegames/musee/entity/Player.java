@@ -35,6 +35,18 @@ public class Player {
         this.hand = hand;
     }
 
+    public List<Space> validMoves() {
+        final List<Space> validMoves = new ArrayList<>();
+
+        hand.forEach(painting -> validMoves.addAll(musee.validSpacesForPainting(painting)));
+
+        return validMoves;
+    }
+
+    public boolean hasValidMoves() {
+        return validMoves().size() > 0;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -50,5 +62,10 @@ public class Player {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return "Player " + id;
     }
 }

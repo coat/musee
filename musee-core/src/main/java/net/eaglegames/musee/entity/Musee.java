@@ -2,6 +2,9 @@ package net.eaglegames.musee.entity;
 
 import net.eaglegames.musee.game.Game;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Musee {
     private Gallery upper;
     private Gallery middle;
@@ -58,5 +61,21 @@ public class Musee {
         score += Gallery.score(game, musee.getLower(), musee.getMiddle());
 
         musee.setScore(score);
+    }
+
+    public List<Space> validSpacesForPainting(final Painting painting) {
+        List<Space> validSpaces = new ArrayList<>(upper.validSpacesForPainting(painting));
+        validSpaces.addAll(middle.validSpacesForPainting(painting));
+        validSpaces.addAll(lower.validSpacesForPainting(painting));
+        return  validSpaces;
+    }
+
+    @Override
+    public String toString() {
+        return "_______________________________________________\n" +
+                upper + "\n" +
+                middle + "\n" +
+                lower +
+                "_______________________________________________\n";
     }
 }

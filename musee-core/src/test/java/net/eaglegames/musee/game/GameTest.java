@@ -1,12 +1,11 @@
 package net.eaglegames.musee.game;
 
-import net.eaglegames.musee.entity.Painting;
-import net.eaglegames.musee.entity.Player;
-import net.eaglegames.musee.entity.Space;
+import net.eaglegames.musee.entity.*;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -17,7 +16,6 @@ public class GameTest {
     @Test
     public void playersAreSetupCorrectly() {
         Game game = new Game();
-        game.start();
 
         assertNotNull(game.getPlayer1());
         assertEquals(5, game.getPlayer1().getHand().size());
@@ -65,7 +63,6 @@ public class GameTest {
     @Test
     public void validMove() {
         Game game = new Game();
-        game.start();
 
         assertEquals(50, game.getDeck().getPaintings().size());
 
@@ -74,9 +71,8 @@ public class GameTest {
 
         assertTrue(space.getPainting() == null);
         boolean success = game.playTurn(space, painting);
-        assertEquals(49, game.getDeck().getPaintings().size());
         assertTrue(success);
-        assertEquals(game.getPlayer2(), game.getCurrentPlayer());
+        assertEquals(49, game.getDeck().getPaintings().size());
 
         success = game.playTurn(space, painting);
         assertFalse("Invalid move should return false", success);
@@ -84,5 +80,108 @@ public class GameTest {
         // Card should still be in the deck and current player remains the same
         assertEquals(49, game.getDeck().getPaintings().size());
         assertEquals(game.getPlayer2(), game.getCurrentPlayer());
+    }
+
+    @Test
+    public void gameplay() {
+        Game game = new Game();
+
+        // reproducible deck order
+        game.setDeck(new Deck());
+        game.getPlayer1().setHand(game.getDeck().draw(5));
+        game.getPlayer2().setHand(game.getDeck().draw(5));
+
+        Game.setupStaircases(game.getPlayer1(), game.getPlayer2(),
+                Arrays.asList(false, true, false, true, false, false),
+                Arrays.asList(false, true, true, false, true, true));
+
+        assertEquals(1, game.getCurrentPlayer().getHand().get(0).getValue().intValue());
+        assertEquals(11, game.getDeck().getPaintings().get(0).getValue().intValue());
+
+        assertEquals(50, game.getDeck().getPaintings().size());
+        assertEquals(5, game.getCurrentPlayer().getHand().size());
+
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(0), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(0), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(1), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(1), game.getCurrentPlayer().getHand().get(0)));
+
+        assertEquals(2, game.getCurrentPlayer().getMusee().getScore());
+        assertEquals(2, game.getOpponent().getMusee().getScore());
+
+        assertEquals(46, game.getDeck().getPaintings().size());
+
+        assertEquals(5, game.getCurrentPlayer().getHand().size());
+        assertEquals(5, game.getOpponent().getHand().size());
+
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(2), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(2), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(3), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(3), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(4), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(4), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(5), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(5), game.getCurrentPlayer().getHand().get(0)));
+
+        // upper gallery bonus should be claimed by player 1
+        assertEquals(10, game.getPlayer1().getMusee().getScore());
+        assertEquals(6, game.getPlayer2().getMusee().getScore());
+        assertTrue(game.getClaimedBonuses().get(Gallery.Type.UPPER));
+
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getMiddle().getSpaces().get(0), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getMiddle().getSpaces().get(0), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getMiddle().getSpaces().get(1), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getMiddle().getSpaces().get(1), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getMiddle().getSpaces().get(2), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getMiddle().getSpaces().get(2), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getMiddle().getSpaces().get(3), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getMiddle().getSpaces().get(3), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getMiddle().getSpaces().get(4), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getMiddle().getSpaces().get(4), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getMiddle().getSpaces().get(5), game.getCurrentPlayer().getHand().get(0)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getMiddle().getSpaces().get(5), game.getCurrentPlayer().getHand().get(0)));
+
+        assertEquals(30, game.getPlayer1().validMoves().size());
+        assertEquals(30, game.getPlayer2().validMoves().size());
+
+        assertTrue(game.getClaimedBonuses().get(Gallery.Type.MIDDLE));
+        assertEquals(23, game.getPlayer1().getMusee().getScore());
+        assertEquals(12, game.getPlayer2().getMusee().getScore());
+
+        assertFalse(game.playTurn(game.getCurrentPlayer().getMusee().getMiddle().getSpaces().get(0), game.getCurrentPlayer().getHand().get(0)));
+
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getLower().getSpaces().get(0), game.getCurrentPlayer().getHand().get(2)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getLower().getSpaces().get(0), game.getCurrentPlayer().getHand().get(2)));
+
+        assertFalse(game.playTurn(game.getCurrentPlayer().getMusee().getLower().getSpaces().get(1), game.getCurrentPlayer().getHand().get(0)));
+
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getLower().getSpaces().get(2), game.getCurrentPlayer().getHand().get(3)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getLower().getSpaces().get(1), game.getCurrentPlayer().getHand().get(3)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getLower().getSpaces().get(3), game.getCurrentPlayer().getHand().get(3)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getLower().getSpaces().get(2), game.getCurrentPlayer().getHand().get(3)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getLower().getSpaces().get(4), game.getCurrentPlayer().getHand().get(3)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getLower().getSpaces().get(3), game.getCurrentPlayer().getHand().get(4)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getLower().getSpaces().get(5), game.getCurrentPlayer().getHand().get(4)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getLower().getSpaces().get(4), game.getCurrentPlayer().getHand().get(4)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getLower().getSpaces().get(1), game.getCurrentPlayer().getHand().get(2)));
+        assertTrue(game.playTurn(game.getCurrentPlayer().getMusee().getLower().getSpaces().get(5), game.getCurrentPlayer().getHand().get(4)));
+
+        printGame(game);
+    }
+
+    private void printGame(Game game) {
+        System.out.println("Deck size: " + game.getDeck().getPaintings().size());
+        System.out.println("Current player: " + game.getCurrentPlayer());
+
+        printPlayer(game.getPlayer1());
+        printPlayer(game.getPlayer2());
+    }
+
+    private void printPlayer(final Player player) {
+        System.out.println(player + "\n  Score: " + player.getMusee().getScore());
+        System.out.println("  Hand: " + player.getHand().stream().map(Painting::toString).collect(Collectors.joining(", ")));
+        System.out.println("  Valid moves: " + player.validMoves().size());
+        System.out.println("  Musee:");
+        System.out.println(player.getMusee());
     }
 }

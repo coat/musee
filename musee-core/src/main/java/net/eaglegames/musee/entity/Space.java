@@ -46,4 +46,9 @@ public class Space {
     public boolean hasPainting() {
         return painting != null;
     }
+
+    @Override
+    public String toString() {
+        return painting == null ? "|     |" : "|" + painting + "|";
+    }
 }

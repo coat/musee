@@ -33,12 +33,15 @@ public class MuseeConsole {
 
         game = new Game();
 
-        game.start();
-
         render(tg);
         screen.readInput();
 
         game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(2), game.getCurrentPlayer().getHand().get(0));
+
+        render(tg);
+        screen.readInput();
+
+        game.playTurn(game.getCurrentPlayer().getMusee().getUpper().getSpaces().get(3), game.getCurrentPlayer().getHand().get(0));
 
         render(tg);
         screen.readInput();
@@ -57,6 +60,7 @@ public class MuseeConsole {
         tg.putString(0, 2, "Your hand: " + hand);
 
         tg.putString(0, 3, "Your Musée");
+        tg.putString(0, 4, game.getCurrentPlayer().getMusee().toString());
 
         screen.refresh();
     }

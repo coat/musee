@@ -3,7 +3,9 @@ package net.eaglegames.musee.entity;
 import net.eaglegames.musee.game.Game;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -103,6 +105,61 @@ public class Gallery {
         }
 
         return score;
+    }
+
+    public boolean validSpaceForPainting(final Space space, final Painting painting) {
+        // can't place a painting on a space that already has a painting
+        if (space.hasPainting()) {
+            return false;
+        }
+
+        // make sure the paintings to the left of the requested space have a smaller value...
+        long left = spaces.stream()
+                .filter(Space::hasPainting)
+                .filter(s -> s.getPosition() < space.getPosition())
+                .filter(s -> s.getPainting().getValue() > painting.getValue())
+                .count();
+
+        // ...and painting to the right have a larger value
+        long right = spaces.stream()
+                .filter(Space::hasPainting)
+                .filter(s -> s.getPosition() > space.getPosition())
+                .filter(s -> s.getPainting().getValue() < painting.getValue())
+                .count();
+
+        return left + right == 0;
+    }
+
+    public List<Space> validSpacesForPainting(final Painting painting) {
+        return spaces.stream()
+                .filter(s -> validSpaceForPainting(s, painting))
+                .collect(Collectors.toList());
+    }
+
+    public String toString() {
+        StringBuilder out = new StringBuilder();
+        out.append(spaces.stream().map(Space::toString).collect(Collectors.joining(" ")))
+                .append(bonus ? " GALLERY\n" : "\n")
+                .append("|     | |     | |     | |     | |     | |     |")
+                .append(bonus ? "  BONUS\n" : "\n")
+                .append("|     | |     | |     | |     | |     | |     |\n");
+
+        spaces.stream().forEach(space -> {
+            if (type.equals(Type.UPPER)) {
+                if (space.isLowerStaircase())
+                    out.append(">     < ");
+                else
+                    out.append("======= ");
+            }
+            if (type.equals(Type.MIDDLE)) {
+                if (space.isLowerStaircase())
+                    out.append(">     < ");
+                else
+                    out.append("======= ");
+            }
+        });
+
+        return out.toString();
     }
 
     public enum Type {

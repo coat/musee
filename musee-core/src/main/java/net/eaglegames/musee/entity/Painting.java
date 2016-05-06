@@ -49,6 +49,11 @@ public class Painting implements Comparable<Painting> {
         return Objects.hash(theme, value);
     }
 
+    @Override
+    public String toString() {
+        return theme.name().substring(0, 2) + ":" + String.format("%1$2s", value);
+    }
+
     public enum Theme {
         LANDSCAPE, WATER, PERSONS, ARCHITECTURE, ANIMAL
     }
