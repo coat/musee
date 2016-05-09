@@ -14,6 +14,7 @@ public class Game {
     private Player player1;
     private Player player2;
     private Player currentPlayer;
+    private Player winner;
     private Deck deck;
     private Map<Gallery.Type, Boolean> claimedBonuses = new HashMap<>();
 
@@ -54,7 +55,7 @@ public class Game {
         Musee.score(this, currentPlayer.getMusee());
 
         if (!player1.hasValidMoves() && !player2.hasValidMoves()) {
-            System.out.println("Game over!");
+            winner = player1.getMusee().getScore() > player2.getMusee().getScore() ? player1 : player2;
         }
 
         // switch player if the next player has moves left
@@ -65,9 +66,6 @@ public class Game {
         return true;
     }
 
-    public Player getOpponent() {
-        return currentPlayer == player1 ? player2 : player1;
-    }
 
     /**
      * Setup staircases from 2 arrays of booleans.  True is a staircase.
@@ -109,10 +107,9 @@ public class Game {
             throw new IllegalArgumentException("There must be exactly 2 players");
         }
 
-        final List<Integer> staircases = RandomUtil.getRandomInts(Gallery.GALLERY_SIZE * 2, 6);
+        final List<Integer> upperStaircases = RandomUtil.getRandomInts(Gallery.GALLERY_SIZE, 3);
+        final List<Integer> lowerStaircases = RandomUtil.getRandomInts(Gallery.GALLERY_SIZE, 3);
 
-        List<Integer> upperStaircases = staircases.subList(0, Gallery.GALLERY_SIZE - 1);
-        List<Integer> lowerStaircases = staircases.subList(Gallery.GALLERY_SIZE, 11);
 
         upperStaircases.stream().forEach(
                 space -> Arrays.stream(players).forEach(
@@ -153,6 +150,18 @@ public class Game {
 
     public void setCurrentPlayer(Player currentPlayer) {
         this.currentPlayer = currentPlayer;
+    }
+
+    public Player getWinner() {
+        return winner;
+    }
+
+    public boolean hasWinner() {
+        return winner != null;
+    }
+
+    public Player getOpponent() {
+        return currentPlayer == player1 ? player2 : player1;
     }
 
     public Map<Gallery.Type, Boolean> getClaimedBonuses() {

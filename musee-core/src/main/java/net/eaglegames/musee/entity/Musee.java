@@ -67,7 +67,8 @@ public class Musee {
         List<Space> validSpaces = new ArrayList<>(upper.validSpacesForPainting(painting));
         validSpaces.addAll(middle.validSpacesForPainting(painting));
         validSpaces.addAll(lower.validSpacesForPainting(painting));
-        return  validSpaces;
+
+        return validSpaces;
     }
 
     @Override
@@ -77,5 +78,17 @@ public class Musee {
                 middle + "\n" +
                 lower +
                 "_______________________________________________\n";
+    }
+
+    public Gallery getGallery(Gallery.Type galleryType) {
+        switch (galleryType) {
+            case UPPER:
+                return getUpper();
+            case MIDDLE:
+                return getMiddle();
+            case LOWER:
+                return getLower();
+        }
+        return null;
     }
 }

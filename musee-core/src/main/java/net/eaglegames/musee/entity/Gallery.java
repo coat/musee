@@ -93,7 +93,7 @@ public class Gallery {
         }
 
         if (!game.getClaimedBonuses().get(gallery.getType())) {
-            if (gallery.getSpaces().stream().filter(Space::hasPainting).count() == 6) {
+            if (gallery.getSpaces().stream().filter(Space::hasPainting).count() == GALLERY_SIZE) {
                 game.getClaimedBonuses().put(gallery.getType(), true);
                 gallery.setBonus(true);
             }
@@ -145,13 +145,7 @@ public class Gallery {
                 .append("|     | |     | |     | |     | |     | |     |\n");
 
         spaces.stream().forEach(space -> {
-            if (type.equals(Type.UPPER)) {
-                if (space.isLowerStaircase())
-                    out.append(">     < ");
-                else
-                    out.append("======= ");
-            }
-            if (type.equals(Type.MIDDLE)) {
+            if (type.equals(Type.UPPER) || type.equals(Type.MIDDLE)) {
                 if (space.isLowerStaircase())
                     out.append(">     < ");
                 else
